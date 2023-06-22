@@ -2,7 +2,7 @@ Encoding: UTF-8
 Package: cytominer
 Type: Package
 Title: Methods for Image-Based Cell Profiling
-Version: 0.2.2.9000
+Version: 0.2.2.9001
 Authors@R: c(person("Tim", "Becker", email = "tbecker@broadinstitute.org", role = "aut"),
     person("Allen", "Goodman", email = "allen.goodman@icloud.com", role = "aut"),
     person("Claire", "McQuin", email = "mcquin@broadinstitute.org", role = "aut"),
@@ -27,6 +27,7 @@ Imports:
     rlang (>= 0.4.5),
     tibble (>= 2.1.3),
     tidyr (>= 1.0.2),
+    furrr (>= 0.3.1),
     glue
 Suggests:
     DBI (>= 0.7),

@@ -1,3 +1,9 @@
+PS: Following README reflects changes in upstream official source code at [cytomining/cytominer](https://github.com/cytomining/cytominer). **Prefer installing Cytominer R package from the official repo, [cytomining/cytominer](https://github.com/cytomining/cytominer)**
+
+For changes to this forked repo, see [Commit History](https://github.com/sbamin/cytominer/commits/master)
+
+***
+
 [![Build Status](https://travis-ci.org/cytomining/cytominer.png?branch=master)](https://travis-ci.org/cytomining/cytominer) [![Coverage Status](https://img.shields.io/codecov/c/github/cytomining/cytominer/master.svg)](https://codecov.io/github/cytomining/cytominer?branch=master) [![CRAN\_Status\_Badge](https://www.r-pkg.org/badges/version/cytominer)](https://cran.r-project.org/package=cytominer)
 
 cytominer

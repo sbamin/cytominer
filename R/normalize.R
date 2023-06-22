@@ -15,6 +15,8 @@
 #' @importFrom magrittr %<>%
 #' @importFrom rlang :=
 #' @importFrom stats cor mad median sd setNames
+#' @importFrom future plan multisession
+#' @importFrom furrr future_map
 #'
 #' @examples
 #' suppressMessages(suppressWarnings(library(magrittr)))
@@ -32,7 +34,7 @@
 #' cytominer::normalize(population, variables, strata, sample, operation = "standardize")
 #' @export
 normalize <- function(population, variables, strata, sample,
-                      operation = "standardize", ...) {
+                      operation = "standardize", nthreads = 4, ...) {
   scale <- function(data, location, dispersion, variables) {
     if (is.data.frame(data)) {
       futile.logger::flog.debug(paste0(
@@ -42,9 +44,9 @@ normalize <- function(population, variables, strata, sample,
       ))
 
       dplyr::bind_cols(
-        data %>% dplyr::select(-variables),
+        data %>% dplyr::select(! any_of(variables)),
         data %>%
-          dplyr::select(variables) %>%
+          dplyr::select(all_of(variables)) %>%
           as.matrix() %>%
           base::scale(
             center = as.matrix(location),
@@ -104,14 +106,22 @@ normalize <- function(population, variables, strata, sample,
   # TOD: Below, change to select(across(all_of(strata)))
   groups <-
     sample %>%
-    dplyr::select(strata) %>%
+    dplyr::select(all_of(strata)) %>%
     dplyr::distinct() %>%
     dplyr::collect()
 
+  # enable parallel map fn
+  print(futile.logger::flog.info(
+    glue::glue("Starting future_map parallel function: Using { nthreads } workers.")
+    )
+  future::plan(future::multisession, workers = nthreads)
+
   Reduce(
     dplyr::union_all,
-    Map(
-      f = function(group) {
+    furrr::future_map(
+      .x = split(x = groups, f = seq(nrow(groups))),
+      .f = function(group) {
+        print(futile.logger::flog.info(glue::glue("Start normalize: { group }")))
         futile.logger::flog.debug(group)
         futile.logger::flog.debug("\tstratum")
         stratum <-
@@ -143,10 +153,10 @@ normalize <- function(population, variables, strata, sample,
           dplyr::inner_join(y = group, by = names(group), copy = TRUE) %>%
           scale(location, dispersion, variables)
         futile.logger::flog.debug("\tscaled")
+        print(futile.logger::flog.info(glue::glue("End normalize: { group }")))
 
         scaled
-      },
-      split(x = groups, f = seq(nrow(groups)))
+      }
     )
   )
 }
