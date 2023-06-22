@@ -113,7 +113,7 @@ normalize <- function(population, variables, strata, sample,
   # enable parallel map fn
   print(futile.logger::flog.info(
     glue::glue("Starting future_map parallel function: Using { nthreads } workers.")
-    )
+    ))
   future::plan(future::multisession, workers = nthreads)
 
   Reduce(
