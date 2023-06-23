@@ -11,6 +11,8 @@
 #'
 #' @return normalized data of the same class as \code{population}.
 #'
+#' NOTE: Experimental - keep track of feature columns changed via following edit. If dispersion is zero, i.e., one or more columns in stratum (control wells) have identical values across replicates ( = no variation), set such  dispersion value to 0.000001 instead of 0. Doing so will replace NaNs in scaled data frame to 0 unless control well values in variable columns or test well columns have significant deviation from that in control wells.
+#'
 #' @importFrom magrittr %>%
 #' @importFrom magrittr %<>%
 #' @importFrom rlang :=
@@ -111,9 +113,12 @@ normalize <- function(population, variables, strata, sample,
     dplyr::collect()
 
   # enable parallel map fn
-  print(futile.logger::flog.info(
+  futile.logger::flog.info(
     glue::glue("Starting future_map parallel function: Using { nthreads } workers.")
-    ))
+    )
+    futile.logger::flog.info(
+    glue::glue("Processing { nrow(groups) } groups")
+    )
   future::plan(future::multisession, workers = nthreads)
 
   Reduce(
@@ -121,7 +126,7 @@ normalize <- function(population, variables, strata, sample,
     furrr::future_map(
       .x = split(x = groups, f = seq(nrow(groups))),
       .f = function(group) {
-        print(futile.logger::flog.info(glue::glue("Start normalize: { group }")))
+        futile.logger::flog.info(glue::glue("Start normalize: { group }"))
         futile.logger::flog.debug(group)
         futile.logger::flog.debug("\tstratum")
         stratum <-
@@ -141,10 +146,18 @@ normalize <- function(population, variables, strata, sample,
         # TODO: Migrate to `dplyr::across` once this issue is fixed
         # https://github.com/tidyverse/dbplyr/issues/480#issuecomment-811814636
 
+		## NOTE: Experimental - keep track of feature columns changed via following edit.
+        ## if dispersion is zero, i.e., one or more columns in stratum (control wells)
+        ## have identical values across replicates ( = no variation), set such 
+        ## dispersion value to 0.000001 instead of 0. Doing so will replace NaNs
+        ## in scaled data frame to 0 unless control well values in variable columns or
+        ## test well columns have significant deviation from that in control wells. 
+
         futile.logger::flog.debug("\tdispersion")
         dispersion <-
           stratum %>%
           dplyr::summarise_at(.funs = dispersion, .vars = variables) %>%
+          dplyr::mutate(across(everything(), ~ if_else(. == 0, 0.000001, .))) %>%
           dplyr::collect()
 
         futile.logger::flog.debug("\tscale")
@@ -153,10 +166,10 @@ normalize <- function(population, variables, strata, sample,
           dplyr::inner_join(y = group, by = names(group), copy = TRUE) %>%
           scale(location, dispersion, variables)
         futile.logger::flog.debug("\tscaled")
-        print(futile.logger::flog.info(glue::glue("End normalize: { group }")))
+        futile.logger::flog.info(glue::glue("End normalize: { group }"))
 
         scaled
-      }
+      }, .progress = TRUE
     )
   )
 }
