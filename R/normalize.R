@@ -157,7 +157,7 @@ normalize <- function(population, variables, strata, sample,
         dispersion <-
           stratum %>%
           dplyr::summarise_at(.funs = dispersion, .vars = variables) %>%
-          dplyr::mutate(across(everything(), ~ if_else(. == 0, 0.000001, .))) %>%
+          dplyr::mutate(across(everything(), ~ dplyr::if_else(. == 0, 0.000001, .))) %>%
           dplyr::collect()
 
         futile.logger::flog.debug("\tscale")
