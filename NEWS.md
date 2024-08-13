@@ -1,3 +1,8 @@
+# cytominer 0.2.2.9001
+
+* Forked repo upto commit: c3c2efc750cf8dea5f85f389eab515d92fa47cd9
+* Replaced default Map function with furrr: future_map to enable parallelization during normalization step.
+
 # cytominer 0.2.2.9000
 
 # cytominer 0.2.2

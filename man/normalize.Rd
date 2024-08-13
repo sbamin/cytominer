@@ -10,6 +10,7 @@ normalize(
   strata,
   sample,
   operation = "standardize",
+  nthreads = 4,
   ...
 )
 }
